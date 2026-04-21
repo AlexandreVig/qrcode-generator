@@ -29,3 +29,7 @@ The code is organized into layers:
 - `src/infrastructure/qr` — adapters around the `qrcode` library
 - `src/features/qr-generator/ui` — React UI for the generator
 - `src/components` — shared shadcn/ui components
+
+## License
+
+[MIT](./LICENSE) © Alexandre Vigneau
