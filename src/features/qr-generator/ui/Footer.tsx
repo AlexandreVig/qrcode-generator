@@ -1,5 +1,6 @@
-const GITHUB_URL = "https://github.com/alexandrevigneau/qrcode-generator";
+const GITHUB_URL = "https://github.com/AlexandreVig/qrcode-generator";
 const PORTFOLIO_URL = "https://avigneau.dev";
+const LICENSE_URL = `${GITHUB_URL}/blob/main/LICENSE`;
 
 export function Footer() {
   return (
@@ -14,6 +15,15 @@ export function Footer() {
             className="font-semibold text-foreground underline decoration-primary underline-offset-2"
           >
             Alexandre Vigneau
+          </a>
+          {" · "}
+          <a
+            href={LICENSE_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="font-medium hover:underline decoration-primary underline-offset-2"
+          >
+            MIT License
           </a>
         </p>
 
