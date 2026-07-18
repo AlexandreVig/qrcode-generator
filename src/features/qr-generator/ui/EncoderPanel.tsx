@@ -1,13 +1,13 @@
 import type { Encoder } from "@/application/qr/getEncoders";
 import type { EncoderField } from "@/domain/qr/encoderDefinition";
 
-import { Input } from "@/components/retroui/Input";
-import { Label } from "@/components/retroui/Label";
-import { RadioGroup } from "@/components/retroui/Radio";
-import { Switch } from "@/components/retroui/Switch";
-import { Tabs } from "@/components/retroui/Tabs";
-import { Text } from "@/components/retroui/Text";
-import { Textarea } from "@/components/retroui/Textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
+import { TabsContent } from "@/components/ui/tabs";
+import { Text } from "@/components/ui/text";
+import { Textarea } from "@/components/ui/textarea";
 
 type EncoderPanelProps = {
   encoder: Encoder;
@@ -137,7 +137,7 @@ function EncoderFieldControl({
             const optionId = `${id}-${opt.value}`;
             return (
               <div key={opt.value} className="flex items-center space-x-2">
-                <RadioGroup.Item id={optionId} value={opt.value} />
+                <RadioGroupItem id={optionId} value={opt.value} />
                 <Label htmlFor={optionId}>{opt.label}</Label>
               </div>
             );
@@ -170,7 +170,7 @@ export function EncoderPanel({
     const passwordDisabled = getString(value.encryption) === "none";
 
     return (
-      <Tabs.Content value={encoder.id} className="border-0 grid w-full gap-4">
+      <TabsContent value={encoder.id} className="border-0 grid w-full gap-4">
         <Text className="font-bold">Enter your wifi network information</Text>
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-x-6 gap-y-4">
@@ -215,7 +215,7 @@ export function EncoderPanel({
             error={fieldErrors[encryptionField.name]}
           />
         ) : null}
-      </Tabs.Content>
+      </TabsContent>
     );
   }
 
@@ -224,7 +224,7 @@ export function EncoderPanel({
     const restFields = encoder.fields.filter((f) => f.name !== "fullName");
 
     return (
-      <Tabs.Content value={encoder.id} className="border-0 grid w-full gap-4">
+      <TabsContent value={encoder.id} className="border-0 grid w-full gap-4">
         <Text className="font-bold">Digital business card information</Text>
 
         {fullNameField ? (
@@ -249,12 +249,12 @@ export function EncoderPanel({
             />
           ))}
         </div>
-      </Tabs.Content>
+      </TabsContent>
     );
   }
 
   return (
-    <Tabs.Content value={encoder.id} className="border-0 grid w-full gap-4">
+    <TabsContent value={encoder.id} className="border-0 grid w-full gap-4">
       {encoder.fields.map((field) => (
         <EncoderFieldControl
           key={field.name}
@@ -265,6 +265,6 @@ export function EncoderPanel({
           error={fieldErrors[field.name]}
         />
       ))}
-    </Tabs.Content>
+    </TabsContent>
   );
 }

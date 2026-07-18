@@ -1,9 +1,9 @@
 import { listEncoders } from "@/application/qr/getEncoders";
 import type { EncoderId } from "@/application/qr/getEncoders";
 
-import { Card } from "@/components/retroui/Card";
-import { Tabs } from "@/components/retroui/Tabs";
-import { Text } from "@/components/retroui/Text";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Text } from "@/components/ui/text";
 
 import { useQrGenerator } from "../model/useQrGenerator";
 import { EncoderPanel } from "./EncoderPanel";
@@ -44,40 +44,38 @@ export function QrGenerator() {
 
       <div className="my-8 sm:my-12 md:my-16 flex justify-center items-start flex-col md:flex-row gap-6 md:gap-8">
         <Card className="w-full max-w-xl text-left">
-          <Card.Content className="grid p-4 sm:p-6">
+          <CardContent className="grid p-4 sm:p-6">
             <Tabs
               className="w-full"
               value={activeEncoderId}
               onValueChange={(next) => setActiveEncoderId(next as EncoderId)}
             >
-              <Tabs.List
+              <TabsList
                 aria-label="QR code input type"
                 className="flex-wrap gap-2 space-x-0"
               >
                 {encoders.map((encoder) => (
-                  <Tabs.Trigger key={encoder.id} value={encoder.id}>
+                  <TabsTrigger key={encoder.id} value={encoder.id}>
                     {encoder.title}
-                  </Tabs.Trigger>
+                  </TabsTrigger>
                 ))}
-              </Tabs.List>
+              </TabsList>
 
-              <Tabs.Panels>
-                {encoders.map((encoder) => (
-                  <EncoderPanel
-                    key={encoder.id}
-                    encoder={encoder}
-                    value={getEncoderInput(encoder.id)}
-                    onChange={(next) => setEncoderInput(encoder.id, next)}
-                    fieldErrors={
-                      shouldShowError && encoder.id === activeEncoderId
-                        ? fieldErrors
-                        : undefined
-                    }
-                  />
-                ))}
-              </Tabs.Panels>
+              {encoders.map((encoder) => (
+                <EncoderPanel
+                  key={encoder.id}
+                  encoder={encoder}
+                  value={getEncoderInput(encoder.id)}
+                  onChange={(next) => setEncoderInput(encoder.id, next)}
+                  fieldErrors={
+                    shouldShowError && encoder.id === activeEncoderId
+                      ? fieldErrors
+                      : undefined
+                  }
+                />
+              ))}
             </Tabs>
-          </Card.Content>
+          </CardContent>
         </Card>
 
         <div className="w-full md:w-auto flex justify-center">

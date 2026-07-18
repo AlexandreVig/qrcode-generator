@@ -1,8 +1,8 @@
 import { useState } from "react";
 
-import { Button } from "@/components/retroui/Button";
-import { Card } from "@/components/retroui/Card";
-import { Popover } from "@/components/retroui/Popover";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 
 type QrPreviewCardProps = {
@@ -26,17 +26,15 @@ function DownloadFormatMenu({
 
   return (
     <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-      <Popover.Trigger asChild>
-        <Button className="z-20" size="icon" disabled={disabled}>
-          {popoverOpen ? (
-            <ChevronUpIcon className="w-4 h-4" />
-          ) : (
-            <ChevronDownIcon className="w-4 h-4" />
-          )}
-        </Button>
-      </Popover.Trigger>
+      <PopoverTrigger render={<Button className="z-20" size="icon" disabled={disabled} />}>
+        {popoverOpen ? (
+          <ChevronUpIcon className="w-4 h-4" />
+        ) : (
+          <ChevronDownIcon className="w-4 h-4" />
+        )}
+      </PopoverTrigger>
 
-      <Popover.Content className="w-fit p-2" align="end">
+      <PopoverContent className="w-fit p-2" align="end">
         <Button
           variant="link"
           onClick={async () => {
@@ -57,7 +55,7 @@ function DownloadFormatMenu({
         >
           Download PNG
         </Button>
-      </Popover.Content>
+      </PopoverContent>
     </Popover>
   );
 }
@@ -73,7 +71,7 @@ export function QrPreviewCard({
 
   return (
     <Card className="h-fit w-full max-w-xs sm:max-w-sm">
-      <Card.Content>
+      <CardContent>
         <div className="flex flex-col items-center gap-4">
           <canvas
             ref={canvasRef}
@@ -99,7 +97,7 @@ export function QrPreviewCard({
             />
           </div>
         </div>
-      </Card.Content>
+      </CardContent>
     </Card>
   );
 }
