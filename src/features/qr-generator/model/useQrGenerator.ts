@@ -4,10 +4,21 @@ import { listEncoders } from "@/application/qr/getEncoders";
 import type { EncoderId } from "@/application/qr/getEncoders";
 import { encodePayload } from "@/application/qr/encodePayload";
 import {
+  DEFAULT_LOGO_SIZE_RATIO,
   renderQrPngDataUrl,
   renderQrSvg,
   renderQrToCanvas,
+  type LogoOptions,
+  type QrLogoShape,
 } from "@/infrastructure/qr/renderQr";
+import { decodeLogoImage } from "@/infrastructure/image/decodeLogoImage";
+import { cropLogoToSquare, type ProcessedLogo } from "@/infrastructure/image/cropLogoToSquare";
+
+const LOGO_ERROR_MESSAGES: Record<string, string> = {
+  "unsupported-type": "Please upload a PNG, JPEG, WebP, or SVG image.",
+  "too-large": "That image is too large — please use a file under 5MB.",
+  "decode-failed": "That file couldn't be read as an image.",
+};
 
 type EncoderInputValue = Record<string, unknown>;
 
@@ -73,6 +84,49 @@ export function useQrGenerator() {
   >(() => ({ ...initialInputsByEncoderId }));
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  const [logo, setLogo] = useState<ProcessedLogo | null>(null);
+  const [logoSizeRatio, setLogoSizeRatio] = useState(DEFAULT_LOGO_SIZE_RATIO);
+  const [logoShape, setLogoShape] = useState<QrLogoShape>("square");
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const [logoLoading, setLogoLoading] = useState(false);
+
+  const logoOptions: LogoOptions | undefined = useMemo(
+    () =>
+      logo
+        ? { image: logo.bitmap, dataUrl: logo.dataUrl, sizeRatio: logoSizeRatio, shape: logoShape }
+        : undefined,
+    [logo, logoSizeRatio, logoShape],
+  );
+
+  // Step-2 stand-in for the interactive cropper (built in a later step): decode the
+  // upload and auto-center-crop it to a square, same behavior the app had before any
+  // crop UI existed. This lets the render pipeline be verified end-to-end first.
+  async function uploadLogo(file: File) {
+    setLogoLoading(true);
+    setLogoError(null);
+    const result = await decodeLogoImage(file);
+    if (!result.ok) {
+      setLogoLoading(false);
+      setLogoError(LOGO_ERROR_MESSAGES[result.error] ?? "Something went wrong with that image.");
+      return;
+    }
+
+    const { width, height } = result.logo;
+    const side = Math.min(width, height);
+    const cropped = await cropLogoToSquare(result.logo, {
+      x: (width - side) / 2,
+      y: (height - side) / 2,
+      size: side,
+    });
+    setLogoLoading(false);
+    setLogo(cropped);
+  }
+
+  function removeLogo() {
+    setLogo(null);
+    setLogoError(null);
+  }
 
   function getEncoderInput(id: EncoderId): EncoderInputValue {
     return inputsByEncoderId[id];
@@ -140,20 +194,20 @@ export function useQrGenerator() {
       return;
     }
 
-    renderQrToCanvas(canvas, payload).catch(() => {
+    renderQrToCanvas(canvas, payload, undefined, logoOptions).catch(() => {
       // Keep UI stable if QR rendering fails (e.g. payload too large).
     });
-  }, [payload]);
+  }, [payload, logoOptions]);
 
   async function downloadPng() {
     if (!payload) return;
-    const dataUrl = await renderQrPngDataUrl(payload);
+    const dataUrl = await renderQrPngDataUrl(payload, undefined, logoOptions);
     triggerDownload(dataUrl, "qr-code.png");
   }
 
   async function downloadSvg() {
     if (!payload) return;
-    const svg = await renderQrSvg(payload);
+    const svg = await renderQrSvg(payload, undefined, logoOptions);
     const blob = new Blob([svg], { type: "image/svg+xml" });
     const url = URL.createObjectURL(blob);
     triggerDownload(url, "qr-code.svg");
@@ -196,5 +250,16 @@ export function useQrGenerator() {
     downloadJpg,
     downloadPng,
     downloadSvg,
+
+    hasLogo: logo !== null,
+    logoThumbnailDataUrl: logo?.dataUrl ?? null,
+    logoSizeRatio,
+    setLogoSizeRatio,
+    logoShape,
+    setLogoShape,
+    logoError,
+    logoLoading,
+    uploadLogo,
+    removeLogo,
   };
 }
