@@ -11,8 +11,8 @@ import {
   type LogoOptions,
   type QrLogoShape,
 } from "@/infrastructure/qr/renderQr";
-import { decodeLogoImage } from "@/infrastructure/image/decodeLogoImage";
-import { cropLogoToSquare, type ProcessedLogo } from "@/infrastructure/image/cropLogoToSquare";
+import { decodeLogoImage, type DecodedLogoSource } from "@/infrastructure/image/decodeLogoImage";
+import { cropLogoToSquare, type CropRect, type ProcessedLogo } from "@/infrastructure/image/cropLogoToSquare";
 
 const LOGO_ERROR_MESSAGES: Record<string, string> = {
   "unsupported-type": "Please upload a PNG, JPEG, WebP, or SVG image.",
@@ -91,6 +91,13 @@ export function useQrGenerator() {
   const [logoError, setLogoError] = useState<string | null>(null);
   const [logoLoading, setLogoLoading] = useState(false);
 
+  // The in-progress upload/crop, before the user confirms — set by selectLogoFile,
+  // cleared by confirmLogoCrop/cancelLogoCrop. Its presence is what opens the cropper.
+  const [pendingLogoSource, setPendingLogoSource] = useState<DecodedLogoSource | null>(null);
+  // Keeps the last decoded (pre-crop, natural aspect ratio) source around so
+  // "Edit crop" can reopen the cropper without re-decoding the original file.
+  const decodedSourceRef = useRef<DecodedLogoSource | null>(null);
+
   const logoOptions: LogoOptions | undefined = useMemo(
     () =>
       logo
@@ -99,32 +106,38 @@ export function useQrGenerator() {
     [logo, logoSizeRatio, logoShape],
   );
 
-  // Step-2 stand-in for the interactive cropper (built in a later step): decode the
-  // upload and auto-center-crop it to a square, same behavior the app had before any
-  // crop UI existed. This lets the render pipeline be verified end-to-end first.
-  async function uploadLogo(file: File) {
+  async function selectLogoFile(file: File) {
     setLogoLoading(true);
     setLogoError(null);
     const result = await decodeLogoImage(file);
+    setLogoLoading(false);
     if (!result.ok) {
-      setLogoLoading(false);
       setLogoError(LOGO_ERROR_MESSAGES[result.error] ?? "Something went wrong with that image.");
       return;
     }
+    decodedSourceRef.current = result.logo;
+    setPendingLogoSource(result.logo);
+  }
 
-    const { width, height } = result.logo;
-    const side = Math.min(width, height);
-    const cropped = await cropLogoToSquare(result.logo, {
-      x: (width - side) / 2,
-      y: (height - side) / 2,
-      size: side,
-    });
-    setLogoLoading(false);
+  async function confirmLogoCrop(crop: CropRect) {
+    if (!pendingLogoSource) return;
+    const cropped = await cropLogoToSquare(pendingLogoSource, crop);
     setLogo(cropped);
+    setPendingLogoSource(null);
+  }
+
+  function cancelLogoCrop() {
+    setPendingLogoSource(null);
+  }
+
+  function editLogoCrop() {
+    if (decodedSourceRef.current) setPendingLogoSource(decodedSourceRef.current);
   }
 
   function removeLogo() {
     setLogo(null);
+    setPendingLogoSource(null);
+    decodedSourceRef.current = null;
     setLogoError(null);
   }
 
@@ -152,6 +165,14 @@ export function useQrGenerator() {
     () => (encodeResult.ok ? {} : getFieldErrors(encodeResult.error)),
     [encodeResult],
   );
+
+  const scannabilityWarning = useMemo(() => {
+    if (!logo) return null;
+    if (payload.length > 300 && logoSizeRatio > 0.24) {
+      return "Long content + large logo may reduce scan reliability. Consider a smaller logo or shorter content.";
+    }
+    return null;
+  }, [logo, payload, logoSizeRatio]);
 
   const shouldShowError = useMemo(() => {
     if (!errorMessage) return false;
@@ -259,7 +280,12 @@ export function useQrGenerator() {
     setLogoShape,
     logoError,
     logoLoading,
-    uploadLogo,
+    pendingLogoSource,
+    selectLogoFile,
+    confirmLogoCrop,
+    cancelLogoCrop,
+    editLogoCrop,
     removeLogo,
+    scannabilityWarning,
   };
 }

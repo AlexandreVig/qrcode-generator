@@ -8,6 +8,7 @@ import { Text } from "@/components/ui/text";
 import { useQrGenerator } from "../model/useQrGenerator";
 import { EncoderPanel } from "./EncoderPanel";
 import { Footer } from "./Footer";
+import { LogoUploadPanel } from "./LogoUploadPanel";
 import { QrPreviewCard } from "./QrPreviewCard";
 
 export function QrGenerator() {
@@ -29,6 +30,22 @@ export function QrGenerator() {
     downloadJpg,
     downloadPng,
     downloadSvg,
+
+    hasLogo,
+    logoThumbnailDataUrl,
+    logoSizeRatio,
+    setLogoSizeRatio,
+    logoShape,
+    setLogoShape,
+    logoError,
+    logoLoading,
+    pendingLogoSource,
+    selectLogoFile,
+    confirmLogoCrop,
+    cancelLogoCrop,
+    editLogoCrop,
+    removeLogo,
+    scannabilityWarning,
   } = useQrGenerator();
 
   return (
@@ -44,7 +61,7 @@ export function QrGenerator() {
 
       <div className="my-8 sm:my-12 md:my-16 flex justify-center items-start flex-col md:flex-row gap-6 md:gap-8">
         <Card className="w-full max-w-xl text-left">
-          <CardContent className="grid p-4 sm:p-6">
+          <CardContent className="grid py-1 px-4 sm:py-2 sm:px-6">
             <Tabs
               className="w-full"
               value={activeEncoderId}
@@ -75,6 +92,24 @@ export function QrGenerator() {
                 />
               ))}
             </Tabs>
+
+            <LogoUploadPanel
+              hasLogo={hasLogo}
+              logoThumbnailDataUrl={logoThumbnailDataUrl}
+              logoSizeRatio={logoSizeRatio}
+              setLogoSizeRatio={setLogoSizeRatio}
+              logoShape={logoShape}
+              setLogoShape={setLogoShape}
+              logoError={logoError}
+              logoLoading={logoLoading}
+              pendingLogoSource={pendingLogoSource}
+              selectLogoFile={selectLogoFile}
+              confirmLogoCrop={confirmLogoCrop}
+              cancelLogoCrop={cancelLogoCrop}
+              editLogoCrop={editLogoCrop}
+              removeLogo={removeLogo}
+              scannabilityWarning={scannabilityWarning}
+            />
           </CardContent>
         </Card>
 
